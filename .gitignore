@@ -1,0 +1,23 @@
+# Virtual environment — rebuildable from pyproject.toml
+.venv/
+
+# Python build artefacts
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Data — derived, potentially large, not source code
+data/
+
+# Local database files
+*.duckdb
+*.duckdb.wal
+
+# Secrets — never, ever commit this
+.env
+
+# macOS junk
+.DS_Store
+
+# Notebook checkpoints
+.ipynb_checkpoints/
