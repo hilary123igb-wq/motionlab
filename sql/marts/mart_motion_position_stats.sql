@@ -23,6 +23,7 @@ SELECT
     r.round_name,
     m.reference,
     m.motion_text,
+    m.info_slide,
     LENGTH(m.info_slide) > 0                                AS has_info_slide,
     COUNT(*)                                                AS n_rooms,
     ROUND(AVG(d.og), 3)                                     AS og_avg,
