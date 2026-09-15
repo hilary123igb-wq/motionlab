@@ -7,7 +7,7 @@ __pycache__/
 *.egg-info/
 
 # Data — derived, potentially large, not source code
-data/
+/data/
 
 # Local database files
 *.duckdb

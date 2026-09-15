@@ -4,7 +4,9 @@ version = "0.1.0"
 description = "Analysing structural positional bias in competitive debating motions"
 requires-python = ">=3.12"
 dependencies = [
-    "httpx>= 0.27"
+    "httpx>=0.27",
+    "duckdb>=1.0",
+    "pandas>=2.0",
 ]
 
 [build-system]

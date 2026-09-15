@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MotionLab — Positional bias at WUDC 2022</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme:light;
+  --paper:#f8f6f1; --ink:#1a1714; --ink-2:#55504a; --muted:#8a847b;
+  --rule:rgba(26,23,20,.14); --rule-strong:rgba(26,23,20,.30);
+  --pos:#1c5cab;  /* above neutral */
+  --neg:#c23b36;  /* below neutral */
+  --serif:"Source Serif 4",Georgia,serif;
+  --sans:"Inter",system-ui,-apple-system,sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --paper:#171614; --ink:#f2efe9; --ink-2:#b8b2a8; --muted:#8a847b;
+    --rule:rgba(242,239,233,.16); --rule-strong:rgba(242,239,233,.34);
+    --pos:#3987e5; --neg:#e66767;
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);
+     font:400 15px/1.6 var(--sans);-webkit-font-smoothing:antialiased}
+.wrap{max-width:1000px;margin:0 auto;padding:0 24px 96px}
+.num{font-variant-numeric:tabular-nums}
+
+/* masthead */
+.masthead{display:flex;justify-content:space-between;align-items:baseline;
+  padding:36px 0 12px;border-bottom:2px solid var(--ink);margin-bottom:8px}
+.wordmark{font:700 26px/1 var(--serif);letter-spacing:-.01em}
+.dateline{font-size:12px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+.strap{border-bottom:1px solid var(--rule);padding-bottom:28px;margin-bottom:44px;
+  font-size:13px;color:var(--ink-2)}
+
+/* lede */
+.lede{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:56px;
+  align-items:start;margin-bottom:56px}
+.lede h1{font:400 34px/1.28 var(--serif);margin:0 0 16px;letter-spacing:-.01em}
+.lede h1 em{font-style:normal;font-weight:700}
+.lede p{margin:0 0 12px;color:var(--ink-2);max-width:54ch}
+.hero{text-align:right;border-left:1px solid var(--rule);padding-left:28px}
+.hero .v{font:600 66px/1 var(--serif);letter-spacing:-.02em;color:var(--neg)}
+.hero .k{font-size:12px;color:var(--muted);letter-spacing:.07em;
+  text-transform:uppercase;margin-top:10px}
+
+/* section headers */
+section{margin-bottom:56px}
+.head{display:flex;justify-content:space-between;align-items:baseline;
+  border-bottom:1px solid var(--rule-strong);padding-bottom:8px;margin-bottom:8px}
+.head h2{font:600 17px/1.3 var(--serif);margin:0}
+.head .meta{font-size:11px;color:var(--muted);letter-spacing:.07em;text-transform:uppercase}
+.note{font-size:13px;color:var(--muted);margin:0 0 28px;max-width:70ch}
+
+/* 2x2 room */
+.room{display:grid;grid-template-columns:1fr 1fr;max-width:560px;
+  border:1px solid var(--rule)}
+.cell{padding:18px 20px;border-right:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+.cell:nth-child(2n){border-right:none}
+.cell:nth-child(n+3){border-bottom:none}
+.cell .k{font-size:11px;letter-spacing:.1em;color:var(--muted)}
+.cell .v{font:600 30px/1.1 var(--serif);margin:4px 0 10px}
+.cell .d{font-size:12px;color:var(--ink-2)}
+.roomside{display:grid;grid-template-columns:1fr 1fr;max-width:560px;
+  font-size:11px;letter-spacing:.1em;color:var(--muted);margin-bottom:6px}
+.roomside span:last-child{text-align:right}
+
+/* generic centred track */
+.track{position:relative;height:14px}
+.track::before{content:"";position:absolute;left:50%;top:0;bottom:0;
+  width:1px;background:var(--rule-strong)}
+.fill{position:absolute;top:3px;bottom:3px}
+.fill.p{left:50%;background:var(--pos);border-radius:0 3px 3px 0;margin-left:1px}
+.fill.n{right:50%;background:var(--neg);border-radius:3px 0 0 3px;margin-right:1px}
+
+/* main chart */
+.controls{display:flex;gap:0;margin-bottom:22px;border:1px solid var(--rule);
+  width:max-content}
+.controls button{font:500 13px/1 var(--sans);padding:9px 16px;border:0;
+  background:transparent;color:var(--ink-2);cursor:pointer}
+.controls button+button{border-left:1px solid var(--rule)}
+.controls button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.legend{display:flex;gap:20px;font-size:12px;color:var(--ink-2);margin-bottom:18px}
+.legend i{width:9px;height:9px;display:inline-block;margin-right:7px;border-radius:2px}
+.brow{display:grid;grid-template-columns:132px 1fr 104px;gap:16px;
+  align-items:center;padding:7px 0;border-bottom:1px solid var(--rule)}
+.brow:hover{background:rgba(128,128,128,.06)}
+.brow .lab{font-size:13px;color:var(--ink-2);text-align:right;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brow .track{height:20px}
+.brow .fill{top:4px;bottom:4px;border-radius:0 4px 4px 0}
+.brow .fill.n{border-radius:4px 0 0 4px}
+.ci{position:absolute;top:9px;height:1px;background:var(--ink-2);opacity:.6}
+.ci::before,.ci::after{content:"";position:absolute;top:-4px;width:1px;height:9px;
+  background:var(--ink-2)}
+.ci::before{left:0}.ci::after{right:0}
+.brow .val{font-size:13px;color:var(--ink)}
+.brow .val small{color:var(--muted);font-size:11px}
+.axis{display:grid;grid-template-columns:132px 1fr 104px;gap:16px;
+  font-size:11px;color:var(--muted);margin-top:10px}
+.axis div:nth-child(2){display:flex;justify-content:space-between}
+
+/* small multiples */
+.sm{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;
+  background:var(--rule);border:1px solid var(--rule)}
+.panel{background:var(--paper);padding:16px 18px 18px}
+.panel .t{display:flex;justify-content:space-between;align-items:baseline;
+  margin-bottom:14px}
+.panel .t b{font:600 13px/1 var(--sans)}
+.panel .t span{font-size:11px;color:var(--muted)}
+.quad{display:grid;grid-template-columns:1fr 1fr;gap:14px 18px}
+.q .k{font-size:10px;letter-spacing:.09em;color:var(--muted);
+  display:flex;justify-content:space-between}
+.q .k b{font-weight:500;color:var(--ink-2)}
+.q .track{height:10px;margin-top:4px}
+.q .fill{top:2px;bottom:2px;border-radius:0 2px 2px 0}
+.q .fill.n{border-radius:2px 0 0 2px}
+
+/* table */
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:right;padding:9px 10px;border-bottom:1px solid var(--rule)}
+th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}
+th{font:500 10px/1 var(--sans);color:var(--muted);letter-spacing:.09em;
+  text-transform:uppercase;border-bottom:1px solid var(--rule-strong)}
+td.mot{color:var(--ink-2);font-size:12px;line-height:1.45;max-width:340px}
+
+/* footer */
+footer{border-top:2px solid var(--ink);padding-top:20px;
+  display:grid;grid-template-columns:repeat(4,1fr);gap:28px;
+  font-size:12px;color:var(--ink-2)}
+footer h3{font:600 10px/1 var(--sans);letter-spacing:.09em;
+  text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+footer p{margin:0}
+
+@media (max-width:820px){
+  .lede{grid-template-columns:1fr;gap:28px}
+  .hero{border-left:0;border-top:1px solid var(--rule);padding:20px 0 0;text-align:left}
+  .sm{grid-template-columns:repeat(2,1fr)}
+  footer{grid-template-columns:repeat(2,1fr)}
+}
+@media (max-width:560px){
+  .sm{grid-template-columns:1fr}
+  .brow,.axis{grid-template-columns:86px 1fr 78px;gap:10px}
+  .lede h1{font-size:26px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="masthead">
+    <div class="wordmark">MotionLab</div>
+    <div class="dateline">WUDC Belgrade 2022 · Preliminary rounds</div>
+  </div>
+  <div class="strap">
+    Structural positional bias in British Parliamentary debating motions —
+    <span id="strap-counts"></span>
+  </div>
+
+  <div class="lede">
+    <div>
+      <h1 id="finding"></h1>
+      <p>Every BP debate distributes exactly six team points across four positions,
+         so a perfectly balanced position averages 1.50. Deviations from that
+         baseline are measured here within each room, then averaged across the
+         rooms that debated a given motion.</p>
+      <p>Because the comparison happens inside a single room, differences in
+         bracket strength largely cancel. What remains is a mixture of genuine
+         motion asymmetry and residual skill differences between the four teams
+         drawn together — the latter is not yet controlled for.</p>
+    </div>
+    <div class="hero">
+      <div class="v" id="hero-v"></div>
+      <div class="k" id="hero-k"></div>
+    </div>
+  </div>
+
+  <section>
+    <div class="head"><h2>The room</h2><div class="meta">Mean team points · neutral 1.50</div></div>
+    <p class="note">Positions laid out as they sit in a debate. Bars run from the
+       1.50 baseline; blue is above, red below.</p>
+    <div class="roomside"><span>GOVERNMENT</span><span>OPPOSITION</span></div>
+    <div class="room" id="room"></div>
+  </section>
+
+  <section>
+    <div class="head"><h2>Positional advantage by motion</h2><div class="meta">95% confidence intervals</div></div>
+    <p class="note">Point estimate with a 95% interval. Where the interval crosses
+       zero the motion is not distinguishable from balanced, and is marked n.s.</p>
+    <div class="controls">
+      <button id="btn-gov" aria-pressed="true">Government − Opposition</button>
+      <button id="btn-oc" aria-pressed="false">Opening − Closing</button>
+    </div>
+    <div class="legend" id="legend"></div>
+    <div id="bars"></div>
+    <div class="axis"><div></div><div><span>−1.00</span><span>0</span><span>+1.00</span></div><div></div></div>
+  </section>
+
+  <section>
+    <div class="head"><h2>Every motion, every position</h2><div class="meta">Deviation from 1.50</div></div>
+    <p class="note">The same 2×2 room, once per motion. Reading across the grid
+       shows which motions were lopsided in which direction.</p>
+    <div class="sm" id="sm"></div>
+  </section>
+
+  <section>
+    <div class="head"><h2>Full results</h2><div class="meta">Nine preliminary motions</div></div>
+    <div style="overflow-x:auto"><table id="table"></table></div>
+  </section>
+
+  <footer>
+    <div><h3>Source</h3><p>Tabbycat public API, WUDC Belgrade 2022 (<span id="f-rooms"></span> debates)</p></div>
+    <div><h3>Method</h3><p>Effects computed per room, then averaged per motion. SE from the per-room spread.</p></div>
+    <div><h3>Not controlled</h3><p>Team strength, position-balance constraints in the draw, judge effects.</p></div>
+    <div><h3>Privacy</h3><p>No speaker names or speech scores are collected or stored.</p></div>
+  </footer>
+
+</div>
+
+<script>
+const DOMAIN = 1.0;      // main chart, ±points
+const DEV    = 0.6;      // room + small multiples, deviation from 1.50
+const CI     = 1.96;
+const POS = ["og","oo","cg","co"];
+
+const METRICS = {
+  gov:{v:"gov_opp_advantage", se:"gov_opp_se",
+       pos:"Government favoured", neg:"Opposition favoured"},
+  oc: {v:"open_close_advantage", se:"open_close_se",
+       pos:"Opening favoured",   neg:"Closing favoured"},
+};
+
+let motions = [], current = "gov";
+const fmt = (x, d = 2) => (x >= 0 ? "+" : "−") + Math.abs(x).toFixed(d);
+
+/** value -> half-width percentage, clamped to the plot domain */
+function bar(value, domain) {
+  const w = Math.min(Math.abs(value) / domain, 1) * 50;
+  const cls = value >= 0 ? "p" : "n";
+  return `<div class="fill ${cls}" style="width:${w}%"></div>`;
+}
+
+function weighted(key) {
+  const rooms = motions.reduce((s, m) => s + m.n_rooms, 0);
+  return motions.reduce((s, m) => s + m[key] * m.n_rooms, 0) / rooms;
+}
+
+function renderLede() {
+  const rooms = motions.reduce((s, m) => s + m.n_rooms, 0);
+  const gov = (weighted("og_avg") + weighted("cg_avg")) / 2;
+  const opp = (weighted("oo_avg") + weighted("co_avg")) / 2;
+  const diff = gov - opp;
+  const side = diff < 0 ? "Opposition" : "Government";
+
+  document.getElementById("strap-counts").textContent =
+    `${motions.length} motions · ${rooms.toLocaleString()} debates · ${(rooms * 4).toLocaleString()} team results`;
+  document.getElementById("finding").innerHTML =
+    `Across nine preliminary rounds, <em>${side} benches out-scored the other side
+     by ${Math.abs(diff).toFixed(2)} team points per debate</em> — and the size of
+     that gap varied more than threefold between motions.`;
+  document.getElementById("hero-v").textContent = fmt(diff);
+  document.getElementById("hero-v").style.color = diff >= 0 ? "var(--pos)" : "var(--neg)";
+  document.getElementById("hero-k").textContent = "Gov − Opp, all rounds";
+  document.getElementById("f-rooms").textContent = rooms.toLocaleString();
+}
+
+function renderRoom() {
+  const order = [["OG","og_avg"],["OO","oo_avg"],["CG","cg_avg"],["CO","co_avg"]];
+  document.getElementById("room").innerHTML = order.map(([name, key]) => {
+    const v = weighted(key), d = v - 1.5;
+    return `<div class="cell">
+      <div class="k">${name}</div>
+      <div class="v num">${v.toFixed(3)}</div>
+      <div class="track">${bar(d, DEV)}</div>
+      <div class="d num" style="margin-top:6px">${fmt(d, 3)} vs neutral</div>
+    </div>`;
+  }).join("");
+}
+
+function renderBars() {
+  const m = METRICS[current];
+  document.getElementById("legend").innerHTML =
+    `<span><i style="background:var(--neg)"></i>${m.neg}</span>
+     <span><i style="background:var(--pos)"></i>${m.pos}</span>`;
+
+  const sorted = [...motions].sort((a, b) => a[m.v] - b[m.v]);
+  document.getElementById("bars").innerHTML = sorted.map(r => {
+    const v = r[m.v], se = r[m.se];
+    const lo = Math.max(v - CI * se, -DOMAIN), hi = Math.min(v + CI * se, DOMAIN);
+    const left = 50 + (lo / DOMAIN) * 50, width = ((hi - lo) / DOMAIN) * 50;
+    const ns = (v - CI * se) * (v + CI * se) <= 0;
+    return `<div class="brow" title="${r.motion_text.replace(/"/g,"&quot;")}">
+      <div class="lab">R${r.round_seq} · ${r.reference}</div>
+      <div class="track">${bar(v, DOMAIN)}
+        <div class="ci" style="left:${left}%;width:${width}%"></div></div>
+      <div class="val num">${fmt(v)}${ns ? " <small>n.s.</small>" : ""}</div>
+    </div>`;
+  }).join("");
+}
+
+function renderSmallMultiples() {
+  document.getElementById("sm").innerHTML = motions.map(r => {
+    const quads = POS.map(p => {
+      const v = r[p + "_avg"], d = v - 1.5;
+      return `<div class="q">
+        <div class="k"><span>${p.toUpperCase()}</span><b class="num">${v.toFixed(2)}</b></div>
+        <div class="track">${bar(d, DEV)}</div>
+      </div>`;
+    }).join("");
+    return `<div class="panel">
+      <div class="t"><b>R${r.round_seq} · ${r.reference}</b><span>${r.n_rooms} rooms</span></div>
+      <div class="quad">${quads}</div>
+    </div>`;
+  }).join("");
+}
+
+function renderTable() {
+  const head = `<tr><th>Round</th><th>Motion</th><th>Info</th><th>Rooms</th>
+    <th>OG</th><th>OO</th><th>CG</th><th>CO</th><th>Gov−Opp</th><th>Open−Close</th></tr>`;
+  document.getElementById("table").innerHTML = head + motions.map(r => `<tr>
+    <td>R${r.round_seq}</td>
+    <td class="mot">${r.motion_text}</td>
+    <td>${r.has_info_slide ? "yes" : "—"}</td>
+    <td class="num">${r.n_rooms}</td>
+    ${POS.map(p => `<td class="num">${r[p + "_avg"].toFixed(2)}</td>`).join("")}
+    <td class="num">${fmt(r.gov_opp_advantage)}</td>
+    <td class="num">${fmt(r.open_close_advantage)}</td>
+  </tr>`).join("");
+}
+
+function select(which) {
+  current = which;
+  document.getElementById("btn-gov").setAttribute("aria-pressed", which === "gov");
+  document.getElementById("btn-oc").setAttribute("aria-pressed", which === "oc");
+  renderBars();
+}
+document.getElementById("btn-gov").onclick = () => select("gov");
+document.getElementById("btn-oc").onclick = () => select("oc");
+
+fetch("data/motions.json")
+  .then(r => r.json())
+  .then(data => {
+    motions = data.sort((a, b) => a.round_seq - b.round_seq);
+    renderLede(); renderRoom(); renderBars(); renderSmallMultiples(); renderTable();
+  })
+  .catch(e => { document.getElementById("finding").textContent = "Could not load data — " + e; });
+</script>
+</body>
+</html>
