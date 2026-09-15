@@ -1,9 +1,9 @@
 {
- "generated_at": "2026-09-15T13:09:24+00:00",
- "n_tournaments": 1,
- "n_motions": 9,
- "n_rooms": 811,
- "n_team_results": 3244,
- "feature_coverage": 1.0,
+ "generated_at": "2026-09-15T13:29:11+00:00",
+ "n_tournaments": 6,
+ "n_motions": 32,
+ "n_rooms": 1060,
+ "n_team_results": 4240,
+ "feature_coverage": 0.281,
  "prompt_version": "v1"
 }

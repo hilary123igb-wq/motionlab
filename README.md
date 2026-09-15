@@ -31,15 +31,17 @@ is plumbing built to make that question answerable.
 ## What it does
 
 ```
-config/tournaments.yaml          registry of public Tabbycat instances
-  └─ probe                       does this one actually expose ballots?
-      └─ ingest                  raw JSON to disk, one file per response, never re-fetched
-          └─ DuckDB warehouse    tournaments · rounds · motions · teams · debate_teams
-              ├─ int_team_strength       points each team held BEFORE each round
-              ├─ int_debate_residuals    result vs what that ranking implied
-              └─ mart_motion_balance     one row per motion, raw and adjusted
-                  ├─ LLM feature layer   motion text → structured columns
-                  └─ JSON export         what the static site reads
+config/tournaments.yaml       registry of public Tabbycat instances
+  └─ probe                    does this one actually expose ballots?
+      ├─ API adapter          REST: rich, but ~1 request per DEBATE
+      └─ page adapter         public results pages: ~1 request per ROUND
+           └─ raw layer       JSON to disk, one file per response, never re-fetched
+                └─ DuckDB     tournaments · rounds · motions · teams · debate_teams
+                     ├─ int_team_strength     points a team held BEFORE each round
+                     ├─ int_debate_residuals  result vs what that ranking implied
+                     └─ mart_motion_balance   one row per motion, raw and adjusted
+                          ├─ LLM feature layer  motion text → structured columns
+                          └─ JSON export        what the static site reads
 ```
 
 ## Quick start
@@ -52,7 +54,7 @@ python3 -m venv .venv && source .venv/bin/activate
 pip install -e .
 
 python scripts/probe_api.py --config config/tournaments.yaml   # which are usable?
-python scripts/ingest_all.py                                   # fetch them (minutes)
+python scripts/ingest_all.py                                   # API where possible, pages otherwise
 python -m motionlab.transforms.build_db                        # raw JSON → DuckDB
 python -m motionlab.transforms.build_marts                     # SQL layers → JSON export
 pytest -q                                                      # data quality checks
@@ -66,6 +68,38 @@ and marts are rebuilt from scratch each time and never modify the raw layer.
 ---
 
 ## How the measurement works
+
+### Two ingestion adapters
+
+Tabbycat's REST API is a per-tournament setting that most organisers never switch on, so an
+API-only pipeline reaches a small slice of historical tournaments. The public **results
+pages** are on almost everywhere, because publishing results is what a tab site is for.
+
+MotionLab therefore has two adapters behind one schema:
+
+| | Reads | Cost for a WUDC-sized tournament | Coverage |
+|---|---|---|---|
+| **API** | `/api/v1/…/ballots` per debate | ~830 requests | low — opt-in per tournament |
+| **Pages** | `/{slug}/results/round/{n}/` per round | **~10 requests** | high |
+
+The page adapter reads the JSON Tabbycat embeds in its results pages after `tablesData:`,
+which is the same structured payload the on-page table binds to — far more stable than
+scraping rendered HTML. Each row yields team, side, result rank and a ballot link containing
+the debate id, which is the room key.
+
+`ingest_all.py` defaults to `--source auto`: it uses the API where ballots are actually
+readable and falls back to pages otherwise. Both write the same raw layer and produce the
+same five warehouse tables, so nothing downstream knows which adapter a tournament came
+through. `team_id` is a string in both paths — the API gives integer ids, the pages give
+team names — so the two concatenate cleanly.
+
+Two deliberate conservatisms in the page adapter:
+
+- **A room is whole or excluded.** Only rooms with exactly four teams, one per side, and
+  ranks 1–4 survive parsing. A half-parsed room would quietly skew every average built on it.
+- **Unrecognised rounds are treated as eliminations and dropped.** Without the API there is
+  no authoritative stage flag, so it is inferred from the round's name. Wrongly dropping a
+  round costs data; wrongly keeping an elimination round corrupts the results.
 
 ### Raw balance
 
@@ -198,6 +232,7 @@ scripts/probe_api.py        is an instance usable?
 scripts/ingest_all.py       fetch every configured tournament
 src/motionlab/
   ingestion/raw.py          fetch-once, cache-on-disk raw layer
+  ingestion/pages.py        adapter 2: public results pages
   transforms/build_db.py    raw JSON → DuckDB tables
   transforms/build_marts.py run SQL layers, export JSON
   features/schema.py        Pydantic feature schema + prompt

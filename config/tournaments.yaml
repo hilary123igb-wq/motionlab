@@ -1,15 +1,25 @@
 # MotionLab tournament registry.
 #
-# One entry per public Tabbycat instance. `slug` is optional — the probe
-# discovers it from the API when omitted. Run:
+# Two accepted row shapes:
 #
-#     python scripts/probe_api.py --config config/tournaments.yaml
+#   base_url + optional slug        - slug is discovered from the API if omitted
+#   url                             - a single tab-site URL; base and slug are split out
 #
-# and keep only the entries that come back USABLE.
+# Then:
+#   python scripts/probe_api.py --config config/tournaments.yaml   # what is readable
+#   python scripts/ingest_all.py                                   # API where possible, else pages
 #
-# Finding more instances: https://debatedirectory.com/tournaments lists ~1,100
-# BP tournaments. Most link to their tab site; the tab site's host is the
-# base_url here.
+# Ingestion picks its adapter per tournament. The REST API is a per-tournament
+# setting most organisers never switch on, so most rows will come through the
+# public results pages instead -- which is also about eighty times cheaper in
+# requests. Force one with --source api / --source pages.
+#
+# FINDING MORE TOURNAMENTS
+# The BP Debate Directory project maintains a public spreadsheet of BP tab sites
+# with team counts and round counts, so you can prioritise the large ones:
+#   https://docs.google.com/spreadsheets/d/167zz_2rI83PXN_oZkIG5fuvVuKxnVtuNL6v0F_8hKJE
+# Prefer tournaments with many rooms: a motion run in 90 rooms is measured far
+# better than one run in 6, and the evidence label on the site says so.
 
 tournaments:
   - name: wudc_2022
@@ -42,3 +52,10 @@ tournaments:
     base_url: https://berkeleyiv2024.calicotab.com
     format: bp
     year: 2024
+
+  # Example of the single-URL shape, which is what the spreadsheet publishes:
+  #
+  # - name: some_open_2025
+  #   url: https://someopen2025.calicotab.com/someopen/
+  #   format: bp
+  #   year: 2025
