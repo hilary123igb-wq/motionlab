@@ -1,0 +1,16 @@
+{
+  "prompt_version": "v1",
+  "provider": "anthropic",
+  "model": "claude-opus-5",
+  "note": "seeded during the build session; re-runnable with an API key via motionlab.features.extract",
+  "motion_text": "This House Believes That LGBTQ+ movements in developing countries should integrate patriotism into their messaging* \r\n\r\n*including actions such as celebrating LGBTQ+ soldiers, talking openly about being \"queer and a patriot\", displaying the pride flag with the national symbol, and avoiding actions such as supporting independence movements within the country or publicly criticizing nationalism",
+  "features": {
+    "primary_topic": "gender_identity",
+    "secondary_topic": "politics",
+    "motion_type": "value",
+    "actor_type": "civil_society",
+    "geographic_scope": "developing_world",
+    "specialist_knowledge": 3,
+    "mechanism_complexity": 3
+  }
+}

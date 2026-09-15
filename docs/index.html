@@ -1,0 +1,680 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MotionLab — Positional balance in debating motions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme:light;
+  --paper:#f8f6f1; --raise:#fffefb; --ink:#1a1714; --ink-2:#55504a; --muted:#8a847b;
+  --rule:rgba(26,23,20,.13); --rule-2:rgba(26,23,20,.28);
+  --pos:#1c5cab; --neg:#c23b36; --wash:rgba(26,23,20,.05);
+  --serif:"Source Serif 4",Georgia,serif;
+  --sans:"Inter",system-ui,-apple-system,sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --paper:#16150f; --raise:#1d1b16; --ink:#f3f0e8; --ink-2:#b9b3a7; --muted:#8a847b;
+    --rule:rgba(243,240,232,.15); --rule-2:rgba(243,240,232,.32);
+    --pos:#3987e5; --neg:#e66767; --wash:rgba(243,240,232,.06);
+  }
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--paper);color:var(--ink);font:400 15px/1.6 var(--sans);
+  -webkit-font-smoothing:antialiased}
+.num{font-variant-numeric:tabular-nums}
+button{font:inherit;cursor:pointer}
+[hidden]{display:none!important}
+
+.topbar{position:sticky;top:0;z-index:40;background:var(--paper);border-bottom:1px solid var(--rule-2)}
+.topbar .inner{max-width:1120px;margin:0 auto;padding:0 24px;height:60px;
+  display:flex;align-items:center;gap:30px}
+.brand{font:700 21px/1 var(--serif);letter-spacing:-.01em;white-space:nowrap}
+.brand sup{font:500 9px/1 var(--sans);letter-spacing:.12em;text-transform:uppercase;
+  color:var(--muted);vertical-align:super;margin-left:6px}
+.tabs{display:flex;gap:2px;margin-right:auto}
+.tabs button{background:none;border:0;padding:8px 12px;color:var(--ink-2);font-size:14px;
+  border-bottom:2px solid transparent;margin-bottom:-1px}
+.tabs button:hover{color:var(--ink)}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--ink);font-weight:500}
+.seg{display:flex;border:1px solid var(--rule);width:max-content}
+.seg button{padding:7px 13px;border:0;background:transparent;color:var(--ink-2);font-size:12.5px}
+.seg button+button{border-left:1px solid var(--rule)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper);font-weight:500}
+
+.wrap{max-width:1120px;margin:0 auto;padding:0 24px 96px}
+section.block{margin:52px 0}
+.head{display:flex;justify-content:space-between;align-items:baseline;gap:20px;
+  border-bottom:1px solid var(--rule-2);padding-bottom:8px;margin-bottom:10px;flex-wrap:wrap}
+.head h2{font:600 17px/1.3 var(--serif);margin:0}
+.head .meta{font-size:11px;color:var(--muted);letter-spacing:.07em;text-transform:uppercase}
+.note{font-size:13px;color:var(--muted);margin:0 0 26px;max-width:74ch}
+
+.lede{display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:52px;align-items:start;padding:44px 0 4px}
+.lede h1{font:400 33px/1.28 var(--serif);margin:0 0 16px;letter-spacing:-.01em}
+.lede h1 em{font-style:normal;font-weight:700}
+.lede p{margin:0 0 12px;color:var(--ink-2);max-width:56ch;font-size:14px}
+.hero{text-align:right;border-left:1px solid var(--rule);padding-left:26px}
+.hero .v{font:600 60px/1 var(--serif);letter-spacing:-.02em}
+.hero .k{font-size:11px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-top:10px}
+
+.track{position:relative;height:14px}
+.track::before{content:"";position:absolute;left:50%;top:0;bottom:0;width:1px;background:var(--rule-2)}
+.fill{position:absolute;top:3px;bottom:3px}
+.fill.p{left:50%;background:var(--pos);border-radius:0 3px 3px 0;margin-left:1px}
+.fill.n{right:50%;background:var(--neg);border-radius:3px 0 0 3px;margin-right:1px}
+
+.roomside{display:grid;grid-template-columns:1fr 1fr;max-width:540px;font-size:10px;
+  letter-spacing:.12em;color:var(--muted);margin-bottom:6px}
+.roomside span:last-child{text-align:right}
+.room{display:grid;grid-template-columns:1fr 1fr;max-width:540px;border:1px solid var(--rule)}
+.cell{padding:16px 18px;border-right:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+.cell:nth-child(2n){border-right:none}
+.cell:nth-child(n+3){border-bottom:none}
+.cell .k{font-size:10px;letter-spacing:.12em;color:var(--muted)}
+.cell .v{font:600 28px/1.1 var(--serif);margin:3px 0 9px}
+.cell .d{font-size:11px;color:var(--ink-2);margin-top:6px}
+
+.legend{display:flex;gap:20px;font-size:12px;color:var(--ink-2);margin:16px 0}
+.legend i{width:9px;height:9px;display:inline-block;margin-right:7px;border-radius:2px}
+.brow{display:grid;grid-template-columns:186px 1fr 92px;gap:16px;align-items:center;
+  padding:7px 0;border-bottom:1px solid var(--rule);cursor:pointer}
+.brow:hover{background:var(--wash)}
+.brow .lab{font-size:13px;color:var(--ink-2);text-align:right;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis}
+.brow .track{height:20px}
+.brow .fill{top:4px;bottom:4px;border-radius:0 4px 4px 0}
+.brow .fill.n{border-radius:4px 0 0 4px}
+.brow .val{font-size:13px;display:flex;align-items:center;gap:7px}
+.axis{display:grid;grid-template-columns:186px 1fr 92px;gap:16px;font-size:11px;
+  color:var(--muted);margin-top:10px}
+.axis div:nth-child(2){display:flex;justify-content:space-between}
+
+.ev{width:7px;height:7px;border-radius:50%;flex:none;display:inline-block}
+.ev.strong{background:var(--ink)}
+.ev.moderate{background:var(--muted)}
+.ev.limited{background:transparent;box-shadow:inset 0 0 0 1px var(--muted)}
+
+.search{width:100%;font:400 15px var(--sans);color:var(--ink);background:var(--raise);
+  border:1px solid var(--rule);padding:11px 14px;border-radius:2px}
+.search:focus{outline:none;border-color:var(--rule-2)}
+.filters{display:flex;flex-wrap:wrap;gap:18px;align-items:center;margin:16px 0 0;
+  padding-bottom:14px;border-bottom:1px solid var(--rule-2)}
+.fgroup{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.fgroup>span{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-right:2px}
+.chip{border:1px solid var(--rule);background:transparent;color:var(--ink-2);
+  padding:5px 11px;border-radius:999px;font-size:12px}
+.chip:hover{border-color:var(--rule-2)}
+.chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.count{font-size:12px;color:var(--muted);margin:14px 0 4px}
+.count b{color:var(--ink);font-weight:600}
+
+.mcard{display:grid;grid-template-columns:minmax(0,1fr) 200px;gap:28px;padding:20px 4px;
+  border-bottom:1px solid var(--rule);cursor:pointer;align-items:start}
+.mcard:hover{background:var(--wash)}
+.mcard .rd{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.mcard .mt{font:400 17px/1.45 var(--serif);margin:5px 0 11px}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tag{font-size:11px;padding:2px 8px;border:1px solid var(--rule);border-radius:999px;color:var(--ink-2)}
+.tag.on{border-color:var(--rule-2);color:var(--ink)}
+.mstat{text-align:right}
+.mstat .v{font:600 21px/1 var(--serif)}
+.mstat .k{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin:5px 0 9px}
+.mstat .rooms{font-size:11px;color:var(--muted);margin-top:7px;
+  display:flex;align-items:center;gap:6px;justify-content:flex-end}
+
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.28);z-index:50}
+.detail{position:fixed;top:0;right:0;bottom:0;width:min(500px,100%);z-index:51;background:var(--paper);
+  border-left:1px solid var(--rule-2);overflow-y:auto;padding:22px 26px 60px}
+.detail .x{position:sticky;top:0;float:right;background:var(--paper);border:0;color:var(--muted);
+  font-size:22px;line-height:1;padding:2px 4px}
+.detail .rd{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.detail h3{font:400 21px/1.4 var(--serif);margin:8px 0 16px}
+.slide{font-size:13px;line-height:1.6;color:var(--ink-2);background:var(--raise);
+  border:1px solid var(--rule);padding:14px 16px;white-space:pre-wrap;max-height:200px;
+  overflow-y:auto;margin-bottom:22px}
+.dstat{display:flex;justify-content:space-between;align-items:baseline;padding:11px 0;
+  border-bottom:1px solid var(--rule);font-size:13px}
+.dstat span{color:var(--ink-2)}
+.dstat b{font-weight:600}
+
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:right;padding:9px 10px;border-bottom:1px solid var(--rule)}
+th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}
+th{font:500 10px/1 var(--sans);color:var(--muted);letter-spacing:.09em;text-transform:uppercase;
+  border-bottom:1px solid var(--rule-2);white-space:nowrap}
+tbody tr{cursor:pointer}
+tbody tr:hover{background:var(--wash)}
+td.mot{color:var(--ink-2);font-size:12px;line-height:1.45;max-width:330px}
+
+.prose{max-width:70ch;font-size:15px;color:var(--ink-2)}
+.prose h3{font:600 15px/1.4 var(--serif);color:var(--ink);margin:30px 0 8px}
+.prose p{margin:0 0 12px}
+.prose code{font:500 13px ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--wash);
+  padding:1px 5px;border-radius:2px}
+.flow{font:500 12px/1.9 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--ink-2);
+  background:var(--raise);border:1px solid var(--rule);padding:18px 20px;white-space:pre;
+  overflow-x:auto;margin:6px 0 20px}
+.facts{display:grid;grid-template-columns:repeat(4,1fr);gap:26px;border-top:1px solid var(--rule-2);
+  padding-top:18px;margin-top:38px;font-size:12px;color:var(--ink-2)}
+.facts h4{font:600 10px/1 var(--sans);letter-spacing:.09em;text-transform:uppercase;
+  color:var(--muted);margin:0 0 7px}
+.facts p{margin:0}
+
+@media (max-width:900px){
+  .lede{grid-template-columns:1fr;gap:26px}
+  .hero{border-left:0;border-top:1px solid var(--rule);padding:18px 0 0;text-align:left}
+  .facts{grid-template-columns:repeat(2,1fr)}
+  .mcard{grid-template-columns:1fr;gap:14px}
+  .mstat{text-align:left}.mstat .rooms{justify-content:flex-start}
+}
+@media (max-width:620px){
+  .topbar .inner{gap:12px;height:auto;padding:10px 16px;flex-wrap:wrap}
+  .wrap{padding:0 16px 64px}
+  .brow,.axis{grid-template-columns:110px 1fr 70px;gap:10px}
+  .lede h1{font-size:25px}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="inner">
+    <div class="brand">MotionLab<sup>beta</sup></div>
+    <div class="tabs" role="tablist">
+      <button role="tab" data-view="overview" aria-selected="true">Overview</button>
+      <button role="tab" data-view="tournaments" aria-selected="false">Tournaments</button>
+      <button role="tab" data-view="motions" aria-selected="false">Motions</button>
+      <button role="tab" data-view="method" aria-selected="false">Method</button>
+    </div>
+    <div class="seg" id="metric-toggle">
+      <button data-metric="adj" aria-pressed="true">Strength-adjusted</button>
+      <button data-metric="raw" aria-pressed="false">Raw</button>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+<!-- OVERVIEW -->
+<div id="view-overview">
+  <div class="lede">
+    <div>
+      <h1 id="finding">Loading…</h1>
+      <p>Every British Parliamentary debate hands out exactly six team points
+         across four positions, so a position that is neither helped nor hindered
+         averages 1.50. MotionLab measures how far each position drifted from
+         that line, motion by motion.</p>
+      <p><b>Strength-adjusted</b> goes further: before each round it ranks the four
+         teams in a room by the points they had already earned, and compares each
+         team's result to what that ranking implied. A motion then only looks
+         one-sided if teams did better or worse than their own records predicted.</p>
+    </div>
+    <div class="hero">
+      <div class="v num" id="hero-v">—</div>
+      <div class="k" id="hero-k"></div>
+    </div>
+  </div>
+
+  <section class="block">
+    <div class="head"><h2>The room</h2><div class="meta" id="room-meta"></div></div>
+    <p class="note">The four positions as they sit in a debate, averaged across every
+       room in the dataset. Bars run from the 1.50 baseline.</p>
+    <div class="roomside"><span>GOVERNMENT</span><span>OPPOSITION</span></div>
+    <div class="room" id="room"></div>
+  </section>
+
+  <section class="block">
+    <div class="head">
+      <h2>Balance by motion</h2>
+      <div class="seg" id="contrast-toggle">
+        <button data-contrast="gov" aria-pressed="true">Gov − Opp</button>
+        <button data-contrast="oc" aria-pressed="false">Opening − Closing</button>
+      </div>
+    </div>
+    <p class="note">Every motion in the dataset, most one-sided first. The dot beside each
+       value shows how much evidence sits behind it — filled for motions run in many rooms,
+       hollow for the few. Click any row for the full motion.</p>
+    <div class="legend" id="legend"></div>
+    <div id="bars"></div>
+    <div class="axis"><div></div><div><span>−1.00</span><span>0</span><span>+1.00</span></div><div></div></div>
+  </section>
+
+  <section class="block" id="topic-block" hidden>
+    <div class="head"><h2>Balance by topic</h2><div class="meta">From the motion-text feature layer</div></div>
+    <p class="note">Motion text is classified into structured features by a language model.
+       Averaging balance within each topic is the first thing that layer buys us — thin at
+       this sample size, and shown here because the mechanism is what matters.</p>
+    <div id="topics"></div>
+  </section>
+</div>
+
+<!-- TOURNAMENTS -->
+<div id="view-tournaments" hidden>
+  <section class="block">
+    <div class="head"><h2>Tournaments</h2><div class="meta" id="t-meta"></div></div>
+    <p class="note">One row per ingested tournament. Position averages are weighted by rooms.
+       Click a row to see that tournament's motions.</p>
+    <div style="overflow-x:auto"><table id="t-table"></table></div>
+  </section>
+</div>
+
+<!-- MOTIONS -->
+<div id="view-motions" hidden>
+  <div style="padding-top:32px">
+    <input class="search" id="q" type="search" placeholder="Search motions and info slides…">
+    <div class="filters" id="filters"></div>
+    <div class="count" id="count"></div>
+  </div>
+  <div id="cards"></div>
+</div>
+
+<!-- METHOD -->
+<div id="view-method" hidden>
+  <section class="block">
+    <div class="head"><h2>How this is built</h2><div class="meta">Pipeline</div></div>
+    <div class="prose">
+      <div class="flow">config/tournaments.yaml   registry of public Tabbycat instances
+  └─ probe             checks each one actually exposes ballots
+      └─ ingest        raw JSON to disk, one file per response, never re-fetched
+          └─ DuckDB    tournaments · rounds · motions · teams · debate_teams
+              ├─ int_team_strength      points a team held BEFORE each round
+              ├─ int_debate_residuals   result vs what that ranking implied
+              └─ mart_motion_balance    one row per motion
+                  ├─ LLM feature layer  motion text to structured columns
+                  └─ JSON export        what this page reads</div>
+
+      <h3>Where the numbers come from</h3>
+      <p>Results are read from each tournament's public Tabbycat REST API by following
+         its own links: tournament → rounds → pairings → ballots. Results are not part of
+         the draw, so every debate needs its own ballot request — roughly 830 for a
+         tournament the size of WUDC. Each response is written to disk unchanged, stamped
+         with its source URL and fetch time, and never requested twice.</p>
+
+      <h3>Raw balance</h3>
+      <p>For each debate, <code>Gov − Opp = (OG + CG)/2 − (OO + CO)/2</code>, then averaged
+         over every room that ran the motion. Positive means Government benches scored
+         more; negative means Opposition did.</p>
+
+      <h3>Strength adjustment</h3>
+      <p>The obvious objection to the raw number is that a motion can look one-sided just
+         because stronger teams happened to sit on one side. So before each round, the four
+         teams in a room are ranked by the points they brought <em>into</em> that round and
+         assigned expected scores of 3 / 2 / 1 / 0, with teams on equal points sharing the
+         places between them. Each team's <em>residual</em> is what it actually scored minus
+         what that ranking expected. Averaging residuals by position gives the adjusted
+         figure.</p>
+      <p>Two things make this safe. Only rounds <em>before</em> the one being measured are
+         used, so the result being explained never feeds into the strength estimate. And the
+         ranking happens inside a single room, so differences between brackets cancel — the
+         question is only who was strongest of these four. Round 1 has no prior information,
+         all four teams tie, and the adjusted figure falls back to the raw one; that is also
+         the only randomly drawn round, so it needs no adjustment.</p>
+
+      <h3>Reading the evidence dots</h3>
+      <p>No significance tests are reported. What is reported is sample size, because a
+         motion debated in 6 rooms cannot be measured as well as one debated in 91. A filled
+         dot means 40 rooms or more, a grey dot 15 to 39, and a hollow dot fewer than 15.
+         Treat hollow dots as suggestive at best.</p>
+
+      <h3>The motion feature layer</h3>
+      <p>Motion text is unstructured prose. A language model converts each motion into
+         structured columns — topic, motion type, actor, geographic scope, how much outside
+         knowledge it demands, how much mechanism a team must build — validated against a
+         Pydantic schema so a malformed or invented answer is rejected rather than stored.
+         Every extraction is cached on disk under a key that includes the prompt version, so
+         the same motion is never sent twice and a given prompt always yields the same
+         feature set. The model is never asked which side it thinks is favoured; that would
+         put the answer into the features.</p>
+
+      <h3>Scope and limits</h3>
+      <p>Preliminary rounds only — elimination rounds draw from a pre-filtered field under
+         different rules. The strength adjustment uses accumulated team points, which treats
+         all wins as equal regardless of who they came against; a sequential rating would be
+         better and is the obvious next step. Position allocation within a room is subject to
+         Tabbycat's position-balance constraints, which this does not model. And with a
+         handful of motions per tournament, comparisons <em>between</em> motions are far
+         less certain than the figure for any single one.</p>
+
+      <h3>Privacy</h3>
+      <p>Speaker names and individual speech scores are stripped at the ingestion boundary,
+         before anything reaches disk. MotionLab stores team, position and result only. No
+         personal data is collected, stored or published.</p>
+
+      <div class="facts">
+        <div><h4>Source</h4><p>Public Tabbycat APIs</p></div>
+        <div><h4>Tournaments</h4><p id="f-t">—</p></div>
+        <div><h4>Debates</h4><p id="f-rooms">—</p></div>
+        <div><h4>Built</h4><p id="f-built">—</p></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+</div>
+
+<div class="scrim" id="scrim" hidden></div>
+<aside class="detail" id="detail" hidden></aside>
+
+<script>
+const DOMAIN = 1.0;   // bar chart half-range, in team points
+const DEV    = 0.6;   // room grid, deviation from 1.50
+const POS    = ["og","oo","cg","co"];
+
+let motions = [], tournaments = [], meta = {};
+const state = {
+  view:"overview", metric:"adj", contrast:"gov",
+  q:"", tournament:"all", topic:"all", type:"all", info:"any", sort:"bias",
+};
+
+const $ = id => document.getElementById(id);
+const fmt = (x, d = 2) => (x >= 0 ? "+" : "−") + Math.abs(x).toFixed(d);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c =>
+  ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
+const titleCase = s => String(s ?? "").replace(/_/g," ").replace(/\b\w/g, c => c.toUpperCase());
+
+/** which column the current toggles point at */
+const col = () => (state.contrast === "gov" ? "gov_opp" : "open_close")
+                  + (state.metric === "adj" ? "_adj" : "_raw");
+const valueOf = m => m[col()];
+
+function bar(value, domain) {
+  const w = Math.min(Math.abs(value) / domain, 1) * 50;
+  return `<div class="fill ${value >= 0 ? "p" : "n"}" style="width:${w}%"></div>`;
+}
+const dot = ev => `<i class="ev ${ev}" title="${ev} evidence"></i>`;
+
+function weighted(key, rows = motions) {
+  const rooms = rows.reduce((s, m) => s + m.n_rooms, 0);
+  return rooms ? rows.reduce((s, m) => s + m[key] * m.n_rooms, 0) / rooms : 0;
+}
+
+/* ---------- overview ---------- */
+
+function renderLede() {
+  const gov = (weighted("og_avg") + weighted("cg_avg")) / 2;
+  const opp = (weighted("oo_avg") + weighted("co_avg")) / 2;
+  const raw = gov - opp;
+  const adj = weighted("gov_opp_adj");
+  const side = raw < 0 ? "Opposition" : "Government";
+  const shrink = Math.abs(raw) > 0.001
+    ? Math.round((1 - Math.abs(adj) / Math.abs(raw)) * 100) : 0;
+
+  $("finding").innerHTML =
+    `Across ${meta.n_motions} motions and ${meta.n_rooms.toLocaleString()} debates,
+     <em>${side} benches scored ${Math.abs(raw).toFixed(2)} team points more per debate</em>
+     than the other side. Once the teams' own prior records are taken into account, that
+     gap ${shrink > 5 ? `narrows to ${Math.abs(adj).toFixed(2)}` : `holds at ${Math.abs(adj).toFixed(2)}`}.`;
+
+  const shown = state.metric === "adj" ? adj : raw;
+  $("hero-v").textContent = fmt(shown);
+  $("hero-v").style.color = shown >= 0 ? "var(--pos)" : "var(--neg)";
+  $("hero-k").textContent = (state.metric === "adj" ? "Adjusted" : "Raw") + " Gov − Opp";
+  $("room-meta").textContent = `${meta.n_team_results.toLocaleString()} team results`;
+  $("t-meta").textContent = `${meta.n_tournaments} ingested`;
+  $("f-t").textContent = meta.n_tournaments;
+  $("f-rooms").textContent = meta.n_rooms.toLocaleString();
+  $("f-built").textContent = (meta.generated_at || "").slice(0, 10);
+}
+
+function renderRoom() {
+  const suffix = state.metric === "adj" ? "_adj" : "_avg";
+  $("room").innerHTML = POS.map(p => {
+    const raw = weighted(p + "_avg");
+    const d = state.metric === "adj" ? weighted(p + "_adj") : raw - 1.5;
+    return `<div class="cell">
+      <div class="k">${p.toUpperCase()}</div>
+      <div class="v num">${raw.toFixed(3)}</div>
+      <div class="track">${bar(d, DEV)}</div>
+      <div class="d num">${fmt(d, 3)} ${state.metric === "adj" ? "vs expected" : "vs neutral"}</div>
+    </div>`;
+  }).join("");
+}
+
+function renderBars() {
+  const [neg, pos] = state.contrast === "gov"
+    ? ["Opposition favoured", "Government favoured"]
+    : ["Closing favoured", "Opening favoured"];
+  $("legend").innerHTML =
+    `<span><i style="background:var(--neg)"></i>${neg}</span>
+     <span><i style="background:var(--pos)"></i>${pos}</span>`;
+
+  $("bars").innerHTML = [...motions]
+    .sort((a, b) => valueOf(a) - valueOf(b))
+    .map(m => `<div class="brow" data-open="${m.tournament_id}|${m.motion_id}">
+        <div class="lab">${esc(m.tournament_title)} · R${m.round_seq}</div>
+        <div class="track">${bar(valueOf(m), DOMAIN)}</div>
+        <div class="val num">${fmt(valueOf(m))}${dot(m.evidence)}</div>
+      </div>`).join("");
+}
+
+function renderTopics() {
+  const classified = motions.filter(m => m.features);
+  if (!classified.length) return;
+  $("topic-block").hidden = false;
+
+  const groups = {};
+  for (const m of classified) {
+    (groups[m.features.primary_topic] ||= []).push(m);
+  }
+  $("topics").innerHTML = Object.entries(groups)
+    .map(([topic, rows]) => [topic, rows, weighted(col(), rows)])
+    .sort((a, b) => a[2] - b[2])
+    .map(([topic, rows, v]) => `<div class="brow" style="cursor:default">
+        <div class="lab">${titleCase(topic)}</div>
+        <div class="track">${bar(v, DOMAIN)}</div>
+        <div class="val num">${fmt(v)}<span style="color:var(--muted);font-size:11px">${rows.length}</span></div>
+      </div>`).join("");
+}
+
+/* ---------- tournaments ---------- */
+
+function renderTournaments() {
+  const head = `<tr><th>Tournament</th><th>Motions</th><th>Rooms</th>
+    <th>OG</th><th>OO</th><th>CG</th><th>CO</th>
+    <th>Gov−Opp raw</th><th>Gov−Opp adj</th><th>Open−Close adj</th><th>Evidence</th></tr>`;
+  $("t-table").innerHTML = head + "<tbody>" + tournaments.map(t => `<tr data-tournament="${esc(t.tournament_id)}">
+      <td>${esc(t.tournament_title)}</td>
+      <td class="num">${t.n_motions}</td>
+      <td class="num">${t.n_rooms}</td>
+      ${POS.map(p => `<td class="num">${t[p + "_avg"].toFixed(2)}</td>`).join("")}
+      <td class="num">${fmt(t.gov_opp_raw)}</td>
+      <td class="num">${fmt(t.gov_opp_adj)}</td>
+      <td class="num">${fmt(t.open_close_adj)}</td>
+      <td>${dot(t.evidence)} ${t.evidence}</td>
+    </tr>`).join("") + "</tbody>";
+}
+
+/* ---------- motions browser ---------- */
+
+function uniq(list) { return [...new Set(list.filter(Boolean))].sort(); }
+
+function renderFilters() {
+  const topics = uniq(motions.map(m => m.features?.primary_topic));
+  const types  = uniq(motions.map(m => m.features?.motion_type));
+  const group = (label, field, opts) => `<div class="fgroup"><span>${label}</span>` +
+    opts.map(([v, text]) =>
+      `<button class="chip" data-f="${field}" data-v="${v}" aria-pressed="${state[field] === v}">${text}</button>`
+    ).join("") + `</div>`;
+
+  $("filters").innerHTML =
+    group("Tournament", "tournament",
+      [["all", "All"], ...tournaments.map(t => [t.tournament_id, t.tournament_title])]) +
+    (topics.length ? group("Topic", "topic",
+      [["all", "All"], ...topics.map(t => [t, titleCase(t)])]) : "") +
+    (types.length ? group("Type", "type",
+      [["all", "All"], ...types.map(t => [t, titleCase(t)])]) : "") +
+    group("Info slide", "info", [["any", "Any"], ["yes", "With"], ["no", "Without"]]) +
+    group("Sort", "sort", [["bias", "Most one-sided"], ["rooms", "Most rooms"], ["round", "Round"]]);
+}
+
+function filtered() {
+  const q = state.q.trim().toLowerCase();
+  let rows = motions.filter(m => {
+    if (q && !`${m.motion_text} ${m.info_slide} ${m.reference} ${m.tournament_title}`
+              .toLowerCase().includes(q)) return false;
+    if (state.tournament !== "all" && m.tournament_id !== state.tournament) return false;
+    if (state.topic !== "all" && m.features?.primary_topic !== state.topic) return false;
+    if (state.type !== "all" && m.features?.motion_type !== state.type) return false;
+    if (state.info === "yes" && !m.has_info_slide) return false;
+    if (state.info === "no" && m.has_info_slide) return false;
+    return true;
+  });
+  if (state.sort === "bias")  rows.sort((a, b) => Math.abs(valueOf(b)) - Math.abs(valueOf(a)));
+  if (state.sort === "rooms") rows.sort((a, b) => b.n_rooms - a.n_rooms);
+  if (state.sort === "round") rows.sort((a, b) =>
+    a.tournament_id.localeCompare(b.tournament_id) || a.round_seq - b.round_seq);
+  return rows;
+}
+
+function renderCards() {
+  const rows = filtered();
+  $("count").innerHTML = `<b>${rows.length}</b> of ${motions.length} motions`;
+  $("cards").innerHTML = rows.length === 0
+    ? `<p class="note" style="padding-top:24px">No motions match those filters.</p>`
+    : rows.map(m => {
+        const v = valueOf(m);
+        const lean = state.contrast === "gov"
+          ? (v >= 0 ? "Government" : "Opposition")
+          : (v >= 0 ? "Opening" : "Closing");
+        const f = m.features;
+        return `<article class="mcard" data-open="${m.tournament_id}|${m.motion_id}">
+          <div>
+            <div class="rd">${esc(m.tournament_title)} · ${esc(m.round_name)}</div>
+            <p class="mt">${esc(m.motion_text)}</p>
+            <div class="tags">
+              <span class="tag on">${lean} ${fmt(v)}</span>
+              ${f ? `<span class="tag">${titleCase(f.primary_topic)}</span>
+                     <span class="tag">${titleCase(f.motion_type)}</span>` : ""}
+              ${m.has_info_slide ? '<span class="tag">Info slide</span>' : ""}
+            </div>
+          </div>
+          <div class="mstat">
+            <div class="v num" style="color:${v >= 0 ? "var(--pos)" : "var(--neg)"}">${fmt(v)}</div>
+            <div class="k">${state.contrast === "gov" ? "Gov − Opp" : "Open − Close"}</div>
+            <div class="track">${bar(v, DOMAIN)}</div>
+            <div class="rooms">${dot(m.evidence)} ${m.n_rooms} rooms</div>
+          </div>
+        </article>`;
+      }).join("");
+}
+
+/* ---------- detail ---------- */
+
+function openDetail(id) {
+  const [tid, mid] = id.split("|");
+  const m = motions.find(x => x.tournament_id === tid && String(x.motion_id) === mid);
+  if (!m) return;
+  const f = m.features;
+  const row = (label, value) =>
+    `<div class="dstat"><span>${label}</span><b class="num">${value}</b></div>`;
+  const signed = (label, v) =>
+    `<div class="dstat"><span>${label}</span><b class="num" style="color:${v >= 0 ? "var(--pos)" : "var(--neg)"}">${fmt(v)}</b></div>`;
+
+  $("detail").innerHTML = `
+    <button class="x" id="close" aria-label="Close">×</button>
+    <div class="rd">${esc(m.tournament_title)} · ${esc(m.round_name)} · ${m.n_rooms} rooms ${dot(m.evidence)}</div>
+    <h3>${esc(m.motion_text)}</h3>
+    ${m.info_slide ? `<div class="slide">${esc(m.info_slide)}</div>` : ""}
+    <div class="roomside"><span>GOVERNMENT</span><span>OPPOSITION</span></div>
+    <div class="room">${POS.map(p => {
+      const avg = m[p + "_avg"];
+      const d = state.metric === "adj" ? m[p + "_adj"] : avg - 1.5;
+      return `<div class="cell"><div class="k">${p.toUpperCase()}</div>
+        <div class="v num">${avg.toFixed(2)}</div>
+        <div class="track">${bar(d, DEV)}</div>
+        <div class="d num">${fmt(d, 2)}</div></div>`;
+    }).join("")}</div>
+    <div style="margin-top:22px">
+      ${signed("Gov − Opp (raw)", m.gov_opp_raw)}
+      ${signed("Gov − Opp (adjusted)", m.gov_opp_adj)}
+      ${signed("Open − Close (raw)", m.open_close_raw)}
+      ${signed("Open − Close (adjusted)", m.open_close_adj)}
+      ${row("Rooms", m.n_rooms)}
+      ${row("Evidence", m.evidence)}
+      ${f ? row("Topic", titleCase(f.primary_topic)) +
+            (f.secondary_topic ? row("Secondary topic", titleCase(f.secondary_topic)) : "") +
+            row("Motion type", titleCase(f.motion_type)) +
+            row("Actor", titleCase(f.actor_type)) +
+            row("Scope", titleCase(f.geographic_scope)) +
+            row("Specialist knowledge", `${f.specialist_knowledge} / 5`) +
+            row("Mechanism complexity", `${f.mechanism_complexity} / 5`)
+          : row("Features", "not extracted")}
+    </div>`;
+  $("detail").hidden = false;
+  $("scrim").hidden = false;
+  $("close").onclick = closeDetail;
+}
+function closeDetail() { $("detail").hidden = true; $("scrim").hidden = true; }
+
+/* ---------- wiring ---------- */
+
+function setView(v) {
+  state.view = v;
+  ["overview","tournaments","motions","method"].forEach(n => $("view-" + n).hidden = n !== v);
+  document.querySelectorAll('.tabs button')
+    .forEach(b => b.setAttribute("aria-selected", b.dataset.view === v));
+  window.scrollTo(0, 0);
+}
+
+function renderAll() {
+  renderLede(); renderRoom(); renderBars(); renderTopics();
+  renderTournaments(); renderCards();
+}
+
+document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => setView(b.dataset.view));
+
+$("metric-toggle").onclick = e => {
+  const b = e.target.closest("button"); if (!b) return;
+  state.metric = b.dataset.metric;
+  $("metric-toggle").querySelectorAll("button")
+    .forEach(x => x.setAttribute("aria-pressed", x === b));
+  renderAll();
+};
+$("contrast-toggle").onclick = e => {
+  const b = e.target.closest("button"); if (!b) return;
+  state.contrast = b.dataset.contrast;
+  $("contrast-toggle").querySelectorAll("button")
+    .forEach(x => x.setAttribute("aria-pressed", x === b));
+  renderBars(); renderTopics(); renderCards();
+};
+$("filters").onclick = e => {
+  const c = e.target.closest(".chip"); if (!c) return;
+  state[c.dataset.f] = c.dataset.v;
+  $("filters").querySelectorAll(`.chip[data-f="${c.dataset.f}"]`)
+    .forEach(x => x.setAttribute("aria-pressed", x === c));
+  renderCards();
+};
+$("q").oninput = e => { state.q = e.target.value; renderCards(); };
+$("scrim").onclick = closeDetail;
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeDetail(); });
+document.addEventListener("click", e => {
+  const open = e.target.closest("[data-open]");
+  if (open) { openDetail(open.dataset.open); return; }
+  const trow = e.target.closest("[data-tournament]");
+  if (trow) {
+    state.tournament = trow.dataset.tournament;
+    setView("motions"); renderFilters(); renderCards();
+  }
+});
+
+Promise.all([
+  fetch("data/motions.json").then(r => r.json()),
+  fetch("data/tournaments.json").then(r => r.json()),
+  fetch("data/meta.json").then(r => r.json()),
+]).then(([m, t, mt]) => {
+  motions = m; tournaments = t; meta = mt;
+  renderFilters();
+  renderAll();
+}).catch(e => {
+  $("finding").textContent = "Could not load the data files — " + e;
+});
+</script>
+</body>
+</html>

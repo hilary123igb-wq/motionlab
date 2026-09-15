@@ -1,0 +1,16 @@
+{
+  "prompt_version": "v1",
+  "provider": "anthropic",
+  "model": "claude-opus-5",
+  "note": "seeded during the build session; re-runnable with an API key via motionlab.features.extract",
+  "motion_text": "This House Opposes the popularization of therapy speak",
+  "features": {
+    "primary_topic": "culture",
+    "secondary_topic": "social",
+    "motion_type": "value",
+    "actor_type": "civil_society",
+    "geographic_scope": "global",
+    "specialist_knowledge": 2,
+    "mechanism_complexity": 2
+  }
+}

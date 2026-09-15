@@ -1,0 +1,16 @@
+{
+  "prompt_version": "v1",
+  "provider": "anthropic",
+  "model": "claude-opus-5",
+  "note": "seeded during the build session; re-runnable with an API key via motionlab.features.extract",
+  "motion_text": "This House Opposes the pressure to focus on promoting one's career at the expense of forming a family",
+  "features": {
+    "primary_topic": "social",
+    "secondary_topic": "culture",
+    "motion_type": "value",
+    "actor_type": "individual",
+    "geographic_scope": "global",
+    "specialist_knowledge": 1,
+    "mechanism_complexity": 2
+  }
+}

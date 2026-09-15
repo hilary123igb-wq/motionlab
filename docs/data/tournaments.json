@@ -1,0 +1,19 @@
+[
+ {
+  "tournament_id": "wudc_2022",
+  "tournament_title": "WUDC Belgrade 2022",
+  "n_motions": 9,
+  "n_rooms": 811.0,
+  "n_team_results": 3244.0,
+  "og_avg": 1.422,
+  "oo_avg": 1.726,
+  "cg_avg": 1.334,
+  "co_avg": 1.518,
+  "gov_opp_raw": -0.244,
+  "gov_opp_adj": -0.269,
+  "open_close_raw": 0.148,
+  "open_close_adj": 0.128,
+  "gov_opp_spread": 0.925,
+  "evidence": "strong"
+ }
+]
